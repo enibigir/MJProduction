@@ -11,8 +11,9 @@ import model RPVMSSM_UFO
 define q =  u c d s u~ c~ d~ s~
 define hg = n1 n2 x1+ x1-
 define sq = ul ul~ dl dl~ ur ur~ dr dr~
-generate p p > go go QED=0, ( go > q sq , ( sq > q hg , ( hg > q sq, ( sq > q q ) ) ) ) , ( go > q sq , ( sq > q hg , ( hg > q sq, ( sq > q q ) ) ) )
-"""
+generate p p > go go QED=0, (go > q q hg, (hg > q q q)) , (go > q q hg, (hg > q q q))
+output {PROCESS} --nojpeg
+""".format(PROCESS=process_name)
 
 default_customizecards="""
 set param_card mass   1000001     1.00000000E+05
