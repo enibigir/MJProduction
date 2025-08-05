@@ -1,12 +1,13 @@
-diff -ruN MG5_aMC_v2_6_5_orig/madgraph/interface/madevent_interface.py MG5_aMC_v2_6_5/madgraph/interface/madevent_interface.py
---- MG5_aMC_v2_6_5_orig/madgraph/interface/madevent_interface.py	2019-02-04 05:19:42.000000000 -0600
-+++ MG5_aMC_v2_6_5/madgraph/interface/madevent_interface.py	2020-08-19 20:26:41.852746604 -0500
-@@ -2486,7 +2486,7 @@
-         if self.run_card['gridpack'] in self.true:        
-             # Running gridpack warmup
-             gridpack_opts=[('accuracy', 0.01),
--                           ('points', 2000),
-+                           ('points', os.getenv("GRIDPACK_NEVENTS") if "GRIDPACK_NEVENTS" in os.environ else 2000),
-                            ('iterations',8),
-                            ('gridpack','.true.')]
-             logger.info('Generating gridpack with run name %s' % self.run_name)
+diff --git a/bin/MadGraph5_aMCatNLO/gridpack_generation.sh b/bin/MadGraph5_aMCatNLO/gridpack_generation.sh
+index 36eebee1..98482acf 100755
+--- a/bin/MadGraph5_aMCatNLO/gridpack_generation.sh
++++ b/bin/MadGraph5_aMCatNLO/gridpack_generation.sh
+@@ -191,6 +191,8 @@ make_gridpack () {
+       cat $PRODHOME/patches/*.patch | patch -p1
+       cp -r $PRODHOME/PLUGIN/CMS_CLUSTER/ PLUGIN/ 
+ 
++      sed -i 's|('points', 2000)|('points', os.getenv("GRIDPACK_NEVENTS") if "GRIDPACK_NEVENTS" in os.environ else 2000)|g' madgraph/interface/madevent_interface.py
++
+       # Copy bias module (cp3.irmp.ucl.ac.be/projects/madgraph/wiki/LOEventGenerationBias)
+       # Expected structure: 
+       # $CARDSDIR/BIAS/{module_name}/...
