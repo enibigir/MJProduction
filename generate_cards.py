@@ -144,7 +144,7 @@ if __name__=="__main__":
         os.system(f'mkdir -p {proc_dir}')
 
     pprint(f'Writing all cards inside {proc_dir}')
-    with open(f'{proc_dir}/{process_name}_process_card.dat','w') as f:
+    with open(f'{proc_dir}/{process_name}_proc_card.dat','w') as f:
         f.write(default_process_card)
     with open(f'{proc_dir}/{process_name}_customizecards.dat','w') as f:
         f.write(default_customizecards)
