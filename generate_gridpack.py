@@ -28,6 +28,7 @@ class ArgumentParser(argparse.ArgumentParser):
     self.add_argument("-i","--in"     , dest="inF"       , type=str           , default=None, help="Input folder with the cards")
     self.add_argument("-q","--queue"  , dest="queue"     , type=str           , default="tomorrow", help="Condor queue to be used. Default is tomorrow (1 day). Other logical options are testmatch (3 days), nextweek (1 week), workday (8 hours)" )
     self.add_argument("-j","--jobs"   , dest="jobs"      , type=int           , default="4", help="Request this number of cores per job" )
+    self.add_argument("-m","--memory" , dest="memory"    , type=int           , default="8000", help="Request memory in megabytes" )
     self.add_argument("-p","--pretend", dest="pretend"   , action="store_true", default=False , help="Only create folders and job scripts, don't run anything")
     self.add_argument("-l","--local",   dest="local"     , action="store_true", default=False , help="Only create local run folders, don't run anything")
     self.add_argument("-n", "--nevents",dest="nevents"   , type=int           , default=2000,   help="GRIDPACK_NEVENTS")
@@ -35,7 +36,7 @@ class ArgumentParser(argparse.ArgumentParser):
 def pprint(t=""):
     print(f'[MJ] {t}') if t else print()
 
-def create_submit_file(process, cards, jobs, queue, exec_dir, logs_dir):
+def create_submit_file(process, cards, jobs, mem, queue, exec_dir, logs_dir):
   submit_file = 'submit.sub'
   with open(submit_file,'w') as fi:
     fi.write("""#
@@ -45,12 +46,13 @@ transfer_input_files    = {CARDS}
 output                  = {LOGSDIR}/{PROCESS}_$(ClusterId).$(ProcId).out
 error                   = {LOGSDIR}/{PROCESS}_$(ClusterId).$(ProcId).err
 log                     = {LOGSDIR}/{PROCESS}_$(ClusterId).log
-RequestCPUs             = {JOBS}
+request_cpus            = {JOBS}
+request_memory          = {MEMORY}
 +JobFlavour             = "{QUEUE}"
 ## +MaxRuntime          = 2000000
 
 queue filename matching ({EXECDIR}/job_{PROCESS}.sh)
-""".format(PROCESS=process, CARDS=cards, EXECDIR=exec_dir, LOGSDIR=logs_dir, JOBS=jobs, QUEUE=queue))
+""".format(PROCESS=process, CARDS=cards, EXECDIR=exec_dir, LOGSDIR=logs_dir, JOBS=jobs, MEMORY=mem, QUEUE=queue))
     fi.close()
 
 
@@ -178,7 +180,7 @@ if __name__ == "__main__":
   if args.local:
     os.system('cp {} {}/'.format(EXECFILE, runs_dir))
   else:
-    create_submit_file(process_name, cards, args.jobs, args.queue, exec_dir, logs_dir)
+    create_submit_file(process_name, cards, args.jobs, args.memory, args.queue, exec_dir, logs_dir)
 
     ###### sends bjobs ######
     if not args.pretend:
