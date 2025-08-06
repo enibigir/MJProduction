@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import os
 import sys
 import pathlib
@@ -7,11 +6,9 @@ import time
 import getpass
 
 '''
-Run for details
+For details
 python3 generate_gridpack.py -h
 '''
-
-tarball_prefix='_tarball.tar.xz'
 
 EXEC_NAME="temp_exec"
 LOGS_NAME="temp_logs"
@@ -42,7 +39,7 @@ def create_submit_file(process, cards, jobs, mem, queue, exec_dir, logs_dir):
     fi.write("""#
 executable              = $(filename)
 arguments               = $(ClusterId)$(ProcId)
-transfer_input_files    = {CARDS}
+transfer_input_files    = {CARDS},patch/set_gridpack_nevents.patch
 output                  = {LOGSDIR}/{PROCESS}_$(ClusterId).$(ProcId).out
 error                   = {LOGSDIR}/{PROCESS}_$(ClusterId).$(ProcId).err
 log                     = {LOGSDIR}/{PROCESS}_$(ClusterId).log
@@ -71,26 +68,20 @@ workarea=$PWD
 LOCAL="{LOCAL}"
 # First we do a sparse checkout of genproductions to avoid copying the whole thing and to also have the latests set of patches available
 # We might want to fix a commit sha here to ensure it doesn't pull some tricks
-git clone https://github.com/cms-sw/genproductions.git --no-checkout genproductions --depth 1
+git clone --quiet https://github.com/cms-sw/genproductions.git --no-checkout genproductions --depth 1
 cd genproductions
 git config core.sparsecheckout true
 echo Utilities/scripts/ >> .git/info/sparse-checkout
 echo MetaData >> .git/info/sparse-checkout
 echo bin/MadGraph5_aMCatNLO >> .git/info/sparse-checkout
 git read-tree -m -u HEAD
-git apply {WORKDIR}/patch/set_gridpack_nevents.patch
+if $LOCAL; then cp {WORKDIR}/patch/set_gridpack_nevents.patch $workarea/; fi
+git apply $workarea/set_gridpack_nevents.patch
 cd bin/MadGraph5_aMCatNLO/
 
 echo ""
 echo "Entering '$PWD'"
 echo ""
-
-# Copy input cards
-#echo "Copy input cards from: {CARDSDIR}"
-#ls {CARDSDIR}
-
-#cp -r {CARDSDIR} ./cards/
-#xrdcp -r {CARDSDIR} ./cards/
 
 # Create cards
 mkdir cards/{PROCESS}
@@ -110,15 +101,18 @@ else
   export GRIDPACK_NEVENTS={NEVENTS}
   sh gridpack_generation.sh {PROCESS} cards/{PROCESS}
   #Copy the gridpack back to somewhere readable
-  mv {PROCESS}*.tar.xz {OUTDIR}/
-  mv {PROCESS}.log {WORKDIR}/{LOGSDIR}/
+  sleep 3
+  gridpack=$(find . -regex '.*\(xz\)')
+  if [ -n "$gridpack" ]; then mv $gridpack {OUTDIR}/; fi
+  if [ -f "{PROCESS}.log" ]; then mv {PROCESS}.log {WORKDIR}/{LOGSDIR}/; fi
 fi
 
 sleep 3
 #Do some cleanup just to be tidy
 cd ../../../
-ls
 rm -rf genproductions
+echo ""
+echo "=== End of Run ==="
 """.format(CARDSDIR=cardsdir, PROCESS=process, NEVENTS=nevents, OUTDIR=outdir, LOGSDIR=logs_dir, WORKDIR=WORK_DIR, LOCAL=LocalScript))
 
   return exec_file
@@ -157,8 +151,6 @@ if __name__ == "__main__":
   process_name=args.inF.split('/')[-1]
 
   pprint(f'Process: {process_name}')
-
-  # exit()
 
   exec_dir,logs_dir,runs_dir = create_dirs(args.tag, args.local)
 

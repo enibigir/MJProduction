@@ -140,7 +140,7 @@ def pprint(t=""):
 if __name__=="__main__":
     pprint('Start')
     proc_dir = f'{cards_dir}/{process_name}'
-    if not os.path.isdir(cards_dir):
+    if not os.path.isdir(proc_dir):
         pprint(f'Creating directory: {proc_dir}')
         os.system(f'mkdir -p {proc_dir}')
 
