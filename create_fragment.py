@@ -2,7 +2,7 @@ import os,sys
 
 StartFromLHE=False
 
-MGLU = 500
+MGLU = 1000
 GRIDPACK="<PATH TO GRIDPACK>"
 
 FRAGMENT=""
@@ -53,8 +53,8 @@ BLOCK MASS        # Mass Spectrum
    1000023     300   # ~chi_20
    1000025     5.00000000E+5   # ~chi_30
    1000035     5.00000000E+5   # ~chi_40
-   1000024     5.00000000E+5   # ~chi_1+
-   1000037     300   # ~chi_2+
+   1000024     300   # ~chi_1+
+   1000037     1.00000000E+05   # ~chi_2+
 '''
 
 import FWCore.ParameterSet.Config as cms
